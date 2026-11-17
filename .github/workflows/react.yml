@@ -10,9 +10,11 @@ env:
   AZURE_WEBAPP_NAME: 'final-dso-webapp-irauldf'
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
 
+  # CI: Integración continua
+  build:
+    runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,8 +28,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Build React
         run: npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-dist
+          path: dist/
+
+  # CD: Despliegue continuo
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: dev
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: react-dist
+          path: ./dist
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
